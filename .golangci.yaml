@@ -1,0 +1,30 @@
+run:
+  skip-dirs:
+    - "bin"
+
+linters-settings:
+  gocyclo:
+    min-complexity: 10
+  gocognit:
+    min-complexity: 15
+
+linters:
+  disable-all: false
+  enable:
+    # code complexity
+    - gocyclo
+    - gocognit
+
+    # security
+    - bodyclose
+    # - gosec
+
+    # performance
+    - maligned
+    - prealloc
+
+    # misc
+    - golint
+    - misspell
+    - unparam # unused parameters
+    - gomnd
