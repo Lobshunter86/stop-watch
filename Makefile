@@ -14,9 +14,9 @@ BUILD_DATE := $(shell shell date -Iseconds)
 REPO := github.com/
 
 LDFLAGS := -w -s
-LDFLAGS += -X "$(REPO)/pkg/version.GitHash=$(COMMIT)"
-LDFLAGS += -X "$(REPO)/pkg/version.GitBranch=$(BRANCH)"
-LDFLAGS += -X "$(REPO)/pkg/version.BuildDate=$(BUILD_DATE)"
+LDFLAGS += -X "$(REPO)/pkg/version.gitHash=$(COMMIT)"
+LDFLAGS += -X "$(REPO)/pkg/version.gitBranch=$(BRANCH)"
+LDFLAGS += -X "$(REPO)/pkg/version.buildDate=$(BUILD_DATE)"
 
 default: lint build
 
