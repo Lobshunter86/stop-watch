@@ -8,7 +8,7 @@ GO      := $(GOENV) go
 
 COMMIT    := $(shell git describe --no-match --always --dirty)
 BRANCH    := $(shell git rev-parse --abbrev-ref HEAD)
-BUILD_DATE := $(shell shell date -Iseconds)
+BUILD_DATE := $(shell date -Iseconds)
 
 # FIXME:
 REPO := github.com/
