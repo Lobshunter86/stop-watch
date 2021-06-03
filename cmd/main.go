@@ -18,10 +18,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+const Argc = 3
+
 var statusFile = "status.json"
 
 func main() {
-	if len(os.Args) != 3 {
+	if len(os.Args) != Argc {
 		fmt.Println(help())
 		return
 	}
@@ -55,7 +57,7 @@ func main() {
 	stopBotton := widget.NewButton("stop", ticker.Stop)
 	go tickLabel(label, &status, ticker)
 	http.Handle("/metrics", promhttp.Handler())
-	go http.ListenAndServe(fmt.Sprintf(":%d", prometheusPort), nil)
+	go http.ListenAndServe(fmt.Sprintf(":%d", prometheusPort), nil) //nolint
 
 	// GUI
 	lo := layout.NewBorderLayout(label, nil, startBotton, stopBotton)
