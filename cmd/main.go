@@ -13,6 +13,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
+	"github.com/lobshunter86/stop-watch/pkg/version"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -33,6 +34,8 @@ func main() {
 		fmt.Println(help())
 		return
 	}
+
+	fmt.Println(version.Version())
 
 	statusFile = os.Args[1]
 	status, err := restoreStatus(statusFile)
