@@ -6,7 +6,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
 	"fyne.io/fyne/v2/app"
@@ -46,13 +48,15 @@ func main() {
 
 	app := app.New()
 	w := app.NewWindow("Stopwatch")
-	w.SetCloseIntercept(func() {
+
+	onClose := func() {
 		err = saveStatus(statusFile, status)
 		if err != nil {
 			fmt.Println("saveStatus: ", err)
 		}
 		w.Close()
-	})
+	}
+	w.SetCloseIntercept(onClose)
 
 	label := widget.NewLabel(formatDuration(status.Duration))
 	ticker := NewTicker(time.Second)
@@ -61,6 +65,20 @@ func main() {
 	go tickLabel(label, &status, ticker)
 	http.Handle("/metrics", promhttp.Handler())
 	go http.ListenAndServe(fmt.Sprintf(":%d", prometheusPort), nil) //nolint
+
+	// catch signal
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc,
+		os.Interrupt,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
+	go func() {
+		sig := <-sc
+		fmt.Printf("Got signal: [%s], shutting down\n", sig.String())
+		onClose()
+	}()
 
 	// GUI
 	lo := layout.NewBorderLayout(label, nil, startBotton, stopBotton)
