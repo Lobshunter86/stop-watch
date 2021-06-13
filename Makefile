@@ -19,7 +19,7 @@ LDFLAGS += -X "$(REPO)/pkg/version.buildDate=$(BUILD_DATE)"
 default: lint build
 
 build:
-	$(GO) build -ldflags '$(LDFLAGS)' -o bin/stop-watch ./cmd
+	$(GO) build -ldflags '$(LDFLAGS)' -o bin/stop-watch .
 
 lint:
 	golangci-lint run
