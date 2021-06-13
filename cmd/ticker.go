@@ -8,6 +8,7 @@ import (
 const LongDuration = 24 * time.Hour * 365 * 100
 
 type Ticker struct {
+	C        <-chan time.Time
 	rwLock   *sync.RWMutex
 	ticker   *time.Ticker
 	duration time.Duration
@@ -15,9 +16,12 @@ type Ticker struct {
 }
 
 func NewTicker(d time.Duration) *Ticker {
+	t := time.NewTicker(LongDuration)
+
 	return &Ticker{
+		C:        t.C,
 		duration: d,
-		ticker:   time.NewTicker(LongDuration),
+		ticker:   t,
 		rwLock:   &sync.RWMutex{},
 		stopped:  true,
 	}
