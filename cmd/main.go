@@ -16,6 +16,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"github.com/lobshunter86/stop-watch/pkg/core"
+	"github.com/lobshunter86/stop-watch/pkg/util"
 	"github.com/lobshunter86/stop-watch/pkg/version"
 )
 
@@ -38,7 +40,7 @@ func main() {
 	fmt.Println(version.Version())
 
 	statusFile = os.Args[1]
-	statusStore, err := NewFileStore(statusFile)
+	statusStore, err := core.NewFileStore(statusFile)
 	if err != nil {
 		fmt.Println("NewFileStore: ", err)
 		return
@@ -59,8 +61,8 @@ func main() {
 	}
 	w.SetCloseIntercept(onClose)
 
-	label := widget.NewLabel(FormatDuration(status.Duration))
-	ticker := NewTicker(time.Second)
+	label := widget.NewLabel(util.FormatDuration(status.Duration))
+	ticker := core.NewTicker(time.Second)
 	startBotton := widget.NewButton("start", ticker.Start)
 	stopBotton := widget.NewButton("stop", ticker.Stop)
 	go tickLabel(label, &status, ticker)
@@ -88,12 +90,12 @@ func main() {
 	w.ShowAndRun()
 }
 
-func tickLabel(label *widget.Label, status *Status, ticker *Ticker) {
+func tickLabel(label *widget.Label, status *Status, ticker *core.Ticker) {
 	for {
 		<-ticker.C
 		status.Duration += time.Second
 		status.Counter.Inc()
-		label.SetText(FormatDuration(status.Duration))
+		label.SetText(util.FormatDuration(status.Duration))
 	}
 }
 
