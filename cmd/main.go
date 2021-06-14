@@ -40,8 +40,8 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 		statusTime := statusStore.GetAll()["root"]
-		status := core.NewStatus(durationCount.WithLabelValues("root"), statusTime)
-		status.Counter.Add(float64(statusTime / time.Second))
+		status := core.NewStatus(metrics.durationCount.WithLabelValues("root"), metrics.durationTotal.WithLabelValues("root"), statusTime)
+		status.TotalCounter.Add(float64(statusTime / time.Second))
 
 		app := app.New()
 		w := app.NewWindow("Stopwatch")
@@ -100,6 +100,7 @@ func tickLabel(label *widget.Label, status *core.Status, ticker *core.Ticker) {
 		<-ticker.C
 		status.Duration += time.Second
 		status.Counter.Inc()
+		status.TotalCounter.Inc()
 		label.SetText(util.FormatDuration(status.Duration))
 	}
 }

@@ -7,13 +7,15 @@ import (
 )
 
 type Status struct {
-	Counter  prometheus.Counter
-	Duration time.Duration `json:"duration,omitempty" yaml:"duration"`
+	Counter      prometheus.Counter
+	TotalCounter prometheus.Counter
+	Duration     time.Duration `json:"duration,omitempty" yaml:"duration"`
 }
 
-func NewStatus(c prometheus.Counter, duration time.Duration) Status {
+func NewStatus(c, tc prometheus.Counter, duration time.Duration) Status {
 	return Status{
-		Counter:  c,
-		Duration: duration,
+		Counter:      c,
+		TotalCounter: tc,
+		Duration:     duration,
 	}
 }
