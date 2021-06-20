@@ -8,6 +8,7 @@ import (
 )
 
 type StatusStore interface {
+	// TODO: handles Status instead of time.duration
 	Save(s map[string]time.Duration) error
 	GetAll() map[string]time.Duration
 }

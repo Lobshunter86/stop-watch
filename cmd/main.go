@@ -8,15 +8,12 @@ import (
 	"syscall"
 	"time"
 
-	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/layout"
-	"fyne.io/fyne/v2/widget"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 
 	"github.com/lobshunter86/stop-watch/pkg/core"
-	"github.com/lobshunter86/stop-watch/pkg/util"
+	"github.com/lobshunter86/stop-watch/pkg/metrics"
+	"github.com/lobshunter86/stop-watch/pkg/ui"
 	"github.com/lobshunter86/stop-watch/pkg/version"
 )
 
@@ -36,32 +33,35 @@ var rootCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		statusStore, err := core.NewFileStore(statusFile)
 		if err != nil {
-			fmt.Println("NewFileStore: ", err)
+			fmt.Fprintln(os.Stderr, "NewFileStore: ", err)
 			return err
 		}
-		statusTime := statusStore.GetAll()["root"]
-		status := core.NewStatus(metrics.durationCount.WithLabelValues("root"), metrics.durationTotal.WithLabelValues("root"), statusTime)
-		status.TotalCounter.Add(float64(statusTime / time.Second))
 
-		app := app.New()
-		w := app.NewWindow("Stopwatch")
+		durations := statusStore.GetAll()
+		statuses := make(map[string]*core.Status, len(durations))
+		for label, duration := range durations {
+			statuses[label] = core.NewStatus(metrics.Metrics.DurationCount.WithLabelValues(label),
+				metrics.Metrics.DurationTotal.WithLabelValues(label), duration)
 
+			statuses[label].TotalCounter.Add(float64(duration / time.Second))
+		}
+
+		http.Handle("/metrics", promhttp.Handler())
+		go http.ListenAndServe(fmt.Sprintf(":%d", prometheusPort), nil) //nolint
+
+		w := ui.NewUIFromStatuses(statuses)
 		onClose := func() {
-			err = statusStore.Save(map[string]time.Duration{"root": status.Duration})
+			s := make(map[string]time.Duration)
+			for label, status := range statuses {
+				s[label] = status.TotalDuration
+			}
+
+			err = statusStore.Save(s)
 			if err != nil {
 				fmt.Println("saveStatus: ", err)
 			}
 			w.Close()
 		}
-		w.SetCloseIntercept(onClose)
-
-		label := widget.NewLabel(util.FormatDuration(status.Duration))
-		ticker := core.NewTicker(time.Second)
-		startBotton := widget.NewButton("start", ticker.Start)
-		stopBotton := widget.NewButton("stop", ticker.Stop)
-		go tickLabel(label, &status, ticker)
-		http.Handle("/metrics", promhttp.Handler())
-		go http.ListenAndServe(fmt.Sprintf(":%d", prometheusPort), nil) //nolint
 
 		// catch signal
 		sc := make(chan os.Signal, 1)
@@ -78,9 +78,7 @@ var rootCmd = &cobra.Command{
 		}()
 
 		// GUI
-		lo := layout.NewBorderLayout(label, nil, startBotton, stopBotton)
-		con := container.New(lo, label, startBotton, stopBotton)
-		w.SetContent(con)
+		w.SetCloseIntercept(onClose)
 		w.ShowAndRun()
 		return nil
 	},
@@ -92,15 +90,5 @@ func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
-	}
-}
-
-func tickLabel(label *widget.Label, status *core.Status, ticker *core.Ticker) {
-	for {
-		<-ticker.C
-		status.Duration += time.Second
-		status.Counter.Inc()
-		status.TotalCounter.Inc()
-		label.SetText(util.FormatDuration(status.Duration))
 	}
 }
