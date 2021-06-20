@@ -8,6 +8,4 @@ So that it's easy to monitor the trends on grafana.
 
 
 ## TODO
-- support multiple stop-watches
 - add same example pictures
-- make code less sh*tty
