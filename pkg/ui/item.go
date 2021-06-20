@@ -29,9 +29,10 @@ type Item struct {
 	deleteBtn            *widget.Button
 	statusIcon           *widget.Icon
 
-	status *core.Status
-	ticker *core.Ticker
-	name   string
+	status  *core.Status
+	ticker  *core.Ticker
+	stopped chan struct{}
+	name    string
 }
 
 func NewItem(title string, status *core.Status, ticker *core.Ticker, statusIcon *widget.Icon, parentItemList *ItemList) *Item {
@@ -44,9 +45,10 @@ func NewItem(title string, status *core.Status, ticker *core.Ticker, statusIcon 
 	titleLabel := widget.NewLabelWithStyle(title, align, *style)
 
 	item := &Item{
-		name:   title,
-		status: status,
-		ticker: ticker,
+		name:    title,
+		status:  status,
+		stopped: make(chan struct{}, 1),
+		ticker:  ticker,
 
 		title:                titleLabel,
 		currentDurationLabel: widget.NewLabel(fmt.Sprintf("current: %s", util.FormatDuration(0))),
@@ -79,6 +81,7 @@ func NewItem(title string, status *core.Status, ticker *core.Ticker, statusIcon 
 		w := fyne.CurrentApp().NewWindow("ARE YOU SURE?")
 		yesBtn := widget.NewButtonWithIcon("YES", theme.ConfirmIcon(), func() {
 			item.parentItemList.RemoveItem(item)
+			item.Stop()
 			w.Close()
 		})
 		noBtn := widget.NewButtonWithIcon("no", theme.CancelIcon(), func() {
@@ -111,17 +114,22 @@ func (item *Item) toContainer() *fyne.Container {
 	return box
 }
 
-func (item *Item) Start() {
-	// FIXME
-	// should exit when item is deleted
-	// otherwise there is reource leak
+func (item *Item) Stop() {
+	item.stopped <- struct{}{}
+}
 
+func (item *Item) Start() {
 	for {
-		<-item.ticker.C
-		item.status.Duration += time.Second
-		item.status.TotalDuration += time.Second
-		item.status.Counter.Inc()
-		item.status.TotalCounter.Inc()
-		item.totalDurationLabel.SetText(fmt.Sprintf("total: %s", util.FormatDuration(item.status.TotalDuration)))
+		select {
+		case <-item.stopped:
+			return
+
+		case <-item.ticker.C:
+			item.status.Duration += time.Second
+			item.status.TotalDuration += time.Second
+			item.status.Counter.Inc()
+			item.status.TotalCounter.Inc()
+			item.totalDurationLabel.SetText(fmt.Sprintf("total: %s", util.FormatDuration(item.status.TotalDuration)))
+		}
 	}
 }
