@@ -2,7 +2,6 @@ package ui
 
 import (
 	"errors"
-	"fmt"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -55,7 +54,6 @@ func (l *ItemList) RemoveItem(item *Item) {
 	delete(l.statuses, item.name)
 	for i, itm := range l.items {
 		if item == itm {
-			fmt.Println("breaking")
 			l.items = append(l.items[:i], l.items[i+1:]...)
 			break
 		}
