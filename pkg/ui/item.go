@@ -119,8 +119,9 @@ func (item *Item) Start() {
 	for {
 		<-item.ticker.C
 		item.status.Duration += time.Second
+		item.status.TotalDuration += time.Second
 		item.status.Counter.Inc()
 		item.status.TotalCounter.Inc()
-		item.totalDurationLabel.SetText(fmt.Sprintf("total: %s", util.FormatDuration(item.status.Duration)))
+		item.totalDurationLabel.SetText(fmt.Sprintf("total: %s", util.FormatDuration(item.status.TotalDuration)))
 	}
 }
