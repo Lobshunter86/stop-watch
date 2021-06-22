@@ -126,10 +126,9 @@ func (item *Item) Start() {
 
 		case <-item.ticker.C:
 			item.status.Duration += time.Second
-			item.status.TotalDuration += time.Second
 			item.status.Counter.Inc()
 			item.status.TotalCounter.Inc()
-			item.totalDurationLabel.SetText(fmt.Sprintf("total: %s", util.FormatDuration(item.status.TotalDuration)))
+			item.totalDurationLabel.SetText(fmt.Sprintf("total: %s", util.FormatDuration(item.status.Duration)))
 		}
 	}
 }

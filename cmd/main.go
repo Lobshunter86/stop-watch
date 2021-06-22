@@ -53,7 +53,7 @@ var rootCmd = &cobra.Command{
 		onClose := func() {
 			s := make(map[string]time.Duration)
 			for label, status := range statuses {
-				s[label] = status.TotalDuration
+				s[label] = status.Duration
 			}
 
 			err = statusStore.Save(s)
