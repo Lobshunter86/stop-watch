@@ -6,7 +6,6 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
@@ -20,14 +19,13 @@ type Item struct {
 	itemBox        *fyne.Container // represents item itself
 
 	// components in itemBox
-	title                *widget.Label
-	currentDurationLabel *widget.Label
-	totalDurationLabel   *widget.Label
-	startBtn             *widget.Button
-	pauseBtn             *widget.Button
-	stopBtn              *widget.Button
-	deleteBtn            *widget.Button
-	statusIcon           *widget.Icon
+	title              *widget.Label
+	totalDurationLabel *widget.Label
+	startBtn           *widget.Button
+	pauseBtn           *widget.Button
+	stopBtn            *widget.Button
+	deleteBtn          *widget.Button
+	statusIcon         *widget.Icon
 
 	status  *core.Status
 	ticker  *core.Ticker
@@ -50,11 +48,10 @@ func NewItem(title string, status *core.Status, ticker *core.Ticker, statusIcon 
 		stopped: make(chan struct{}, 1),
 		ticker:  ticker,
 
-		title:                titleLabel,
-		currentDurationLabel: widget.NewLabel(fmt.Sprintf("current: %s", util.FormatDuration(0))),
-		totalDurationLabel:   widget.NewLabel(fmt.Sprintf("total: %s", util.FormatDuration(status.Duration))),
-		statusIcon:           statusIcon,
-		parentItemList:       parentItemList,
+		title:              titleLabel,
+		totalDurationLabel: widget.NewLabel(fmt.Sprintf("total: %s", util.FormatDuration(status.Duration))),
+		statusIcon:         statusIcon,
+		parentItemList:     parentItemList,
 
 		// TODO: stop shall add current duration to total duration & reset current duration
 		// pause just simply stops ticker
@@ -97,16 +94,14 @@ func NewItem(title string, status *core.Status, ticker *core.Ticker, statusIcon 
 }
 
 func (item *Item) toContainer() *fyne.Container {
-	rows := 3
+	rows := 2
 	columns := 2
 	box := container.NewGridWithRows(
 		rows,
 		container.NewGridWithColumns(columns, item.title, item.statusIcon),
-		item.currentDurationLabel,
 		item.totalDurationLabel,
 		item.startBtn,
 		item.pauseBtn,
-		layout.NewSpacer(),
 		item.stopBtn,
 		item.deleteBtn,
 	)
