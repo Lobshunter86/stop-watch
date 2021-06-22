@@ -31,6 +31,7 @@ func NewFileStore(filename string) (StatusStore, error) {
 
 		return store, err
 	}
+	defer file.Close()
 
 	data, err := ioutil.ReadAll(file)
 	if err != nil {
@@ -46,6 +47,7 @@ func (f *FileStore) Save(s map[string]time.Duration) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
 	f.Status = s
 
