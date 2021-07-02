@@ -16,7 +16,7 @@ import (
 	"github.com/lobshunter86/stop-watch/pkg/metrics"
 )
 
-func NewUIFromStatuses(statuses map[string]*core.Status) fyne.Window {
+func NewUIFromStatuses(statuses map[string]*core.Status, saveStatusHook func()) fyne.Window {
 	a := app.New()
 	win := a.NewWindow("stop watch")
 	win.CenterOnScreen()
@@ -28,7 +28,7 @@ func NewUIFromStatuses(statuses map[string]*core.Status) fyne.Window {
 	for label, status := range statuses {
 		ticker := core.NewTicker(time.Second)
 		statusIcon := widget.NewIcon(stopImg)
-		item := NewItem(label, status, ticker, statusIcon, itemList)
+		item := NewItem(label, status, ticker, statusIcon, itemList, saveStatusHook)
 		items = append(items, item)
 		go item.Start()
 	}
@@ -36,7 +36,7 @@ func NewUIFromStatuses(statuses map[string]*core.Status) fyne.Window {
 	itemList.SetItems(items)
 	itemList.listCtner = itemList.ToContainer()
 
-	newItemBotton := NewAddItemBotton(itemList)
+	newItemBotton := NewAddItemBotton(itemList, saveStatusHook)
 	outerBox.Add(itemList.listCtner)
 	outerBox.Add(newItemBotton)
 
@@ -44,7 +44,7 @@ func NewUIFromStatuses(statuses map[string]*core.Status) fyne.Window {
 	return win
 }
 
-func NewAddItemBotton(itemList *ItemList) *widget.Button {
+func NewAddItemBotton(itemList *ItemList, saveStatusHook func()) *widget.Button {
 	botton := widget.NewButtonWithIcon("", theme.ContentAddIcon(), func() {
 		w := fyne.CurrentApp().NewWindow("enter new item name")
 		label := ""
@@ -55,7 +55,7 @@ func NewAddItemBotton(itemList *ItemList) *widget.Button {
 				metrics.Metrics.DurationTotal.WithLabelValues(label), 0)
 			statusIcon := widget.NewIcon(stopImg)
 			ticker := core.NewTicker(time.Second)
-			item := NewItem(label, status, ticker, statusIcon, itemList)
+			item := NewItem(label, status, ticker, statusIcon, itemList, saveStatusHook)
 			go item.Start()
 			err := itemList.AppendItem(item)
 			if err != nil {

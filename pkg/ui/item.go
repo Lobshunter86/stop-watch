@@ -33,7 +33,7 @@ type Item struct {
 	name    string
 }
 
-func NewItem(title string, status *core.Status, ticker *core.Ticker, statusIcon *widget.Icon, parentItemList *ItemList) *Item {
+func NewItem(title string, status *core.Status, ticker *core.Ticker, statusIcon *widget.Icon, parentItemList *ItemList, saveStatusHook func()) *Item {
 	var align fyne.TextAlign = 1
 	style := &fyne.TextStyle{
 		Bold:      true,
@@ -65,6 +65,7 @@ func NewItem(title string, status *core.Status, ticker *core.Ticker, statusIcon 
 			ticker.Stop()
 			statusIcon.Resource = stopImg
 			statusIcon.Refresh()
+			saveStatusHook()
 		}),
 
 		pauseBtn: widget.NewButton("pause", func() {

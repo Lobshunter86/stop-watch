@@ -17,12 +17,12 @@ import (
 	"github.com/lobshunter86/stop-watch/pkg/version"
 )
 
-var statusFile string
-var prometheusPort int
+var statusFile = "status.json"
+var prometheusPort = 9111
 
 func init() {
-	rootCmd.Flags().StringVarP(&statusFile, "statusfile", "s", "status.json", "path to status file")
-	rootCmd.Flags().IntVarP(&prometheusPort, "port", "p", 9111, "prometheus metrics port")
+	rootCmd.Flags().StringVarP(&statusFile, "statusfile", "s", statusFile, "path to status file")
+	rootCmd.Flags().IntVarP(&prometheusPort, "port", "p", prometheusPort, "prometheus metrics port")
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -49,8 +49,7 @@ var rootCmd = &cobra.Command{
 		http.Handle("/metrics", promhttp.Handler())
 		go http.ListenAndServe(fmt.Sprintf(":%d", prometheusPort), nil) //nolint
 
-		w := ui.NewUIFromStatuses(statuses)
-		onClose := func() {
+		saveStatus := func() {
 			s := make(map[string]time.Duration)
 			for label, status := range statuses {
 				s[label] = status.Duration
@@ -60,6 +59,11 @@ var rootCmd = &cobra.Command{
 			if err != nil {
 				fmt.Println("saveStatus: ", err)
 			}
+		}
+
+		w := ui.NewUIFromStatuses(statuses, saveStatus)
+		onClose := func() {
+			saveStatus()
 			w.Close()
 		}
 

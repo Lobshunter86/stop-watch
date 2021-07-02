@@ -42,8 +42,10 @@ func NewFileStore(filename string) (StatusStore, error) {
 	return store, err
 }
 
+const FILEMODE = 0644
+
 func (f *FileStore) Save(s map[string]time.Duration) error {
-	file, err := os.OpenFile(f.filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(f.filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, FILEMODE)
 	if err != nil {
 		return err
 	}
