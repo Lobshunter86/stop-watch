@@ -2,8 +2,10 @@ package ui
 
 import (
 	"errors"
+	"image/color"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 
 	"github.com/lobshunter86/stop-watch/pkg/core"
@@ -20,8 +22,9 @@ var (
 type ItemList struct {
 	statuses map[string]*core.Status
 
-	container *fyne.Container // parent OuterBox that contains item list
-	listCtner *fyne.Container // ItemList itself
+	container   *fyne.Container   // parent OuterBox that contains item list
+	listCtner   *fyne.Container   // ItemList itself
+	scrollCtner *container.Scroll // scrollable list
 
 	// TODO: maybe use map instead of list for items
 	// need to keep items in order
@@ -44,10 +47,18 @@ func (l *ItemList) SetItems(items []*Item) {
 func (l *ItemList) ToContainer() *fyne.Container {
 	box := container.NewVBox()
 	for _, item := range l.items {
+		divider := canvas.NewLine(color.Gray16{0xaff0})
+		divider.StrokeWidth = 1
 		box.Add(item.itemBox)
+		box.Add(divider)
 	}
 
 	return box
+}
+
+func (l *ItemList) ToScrollContainer() *container.Scroll {
+	scroll := container.NewVScroll(l.listCtner)
+	return scroll
 }
 
 func (l *ItemList) RemoveItem(item *Item) {

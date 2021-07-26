@@ -6,6 +6,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
@@ -19,13 +20,18 @@ type Item struct {
 	itemBox        *fyne.Container // represents item itself
 
 	// components in itemBox
-	title              *widget.Label
-	totalDurationLabel *widget.Label
-	startBtn           *widget.Button
-	pauseBtn           *widget.Button
-	stopBtn            *widget.Button
-	deleteBtn          *widget.Button
-	statusIcon         *widget.Icon
+	title *widget.Label
+	// test currnentDuration
+	isPause              *bool
+	isStart              *bool
+	currentDuration      *time.Duration
+	currentDurationLabel *widget.Label
+	totalDurationLabel   *widget.Label
+	startBtn             *widget.Button
+	pauseBtn             *widget.Button
+	stopBtn              *widget.Button
+	deleteBtn            *widget.Button
+	statusIcon           *widget.Icon
 
 	status  *core.Status
 	ticker  *core.Ticker
@@ -42,6 +48,12 @@ func NewItem(title string, status *core.Status, ticker *core.Ticker, statusIcon 
 	}
 	titleLabel := widget.NewLabelWithStyle(title, align, *style)
 
+	// test currnentDuration
+	isPause := false
+	isStart := false
+	var currentDuration time.Duration = 0
+	currentDurationLabel := widget.NewLabel(fmt.Sprintf("C: %s", util.FormatDuration(currentDuration)))
+
 	item := &Item{
 		name:    title,
 		status:  status,
@@ -49,33 +61,52 @@ func NewItem(title string, status *core.Status, ticker *core.Ticker, statusIcon 
 		ticker:  ticker,
 
 		title:              titleLabel,
-		totalDurationLabel: widget.NewLabel(fmt.Sprintf("total: %s", util.FormatDuration(status.Duration))),
-		statusIcon:         statusIcon,
-		parentItemList:     parentItemList,
+		totalDurationLabel: widget.NewLabel(fmt.Sprintf("T: %s", util.FormatDuration(status.Duration))),
+		// test currnentDuration
+		isPause:              &isPause,
+		isStart:              &isStart,
+		currentDuration:      &currentDuration,
+		currentDurationLabel: currentDurationLabel,
+		statusIcon:           statusIcon,
+		parentItemList:       parentItemList,
 
 		// TODO: stop shall add current duration to total duration & reset current duration
 		// pause just simply stops ticker
-		startBtn: widget.NewButton("start", func() {
+		startBtn: widget.NewButtonWithIcon("", theme.MediaPlayIcon(), func() {
+			// test currnentDuration
 			ticker.Start()
 			statusIcon.Resource = startImg
 			statusIcon.Refresh()
+			if !isStart {
+				if isPause {
+					isPause = false
+				} else {
+					currentDuration = 0
+				}
+				isStart = true
+				currentDurationLabel.SetText(fmt.Sprintf("C: %s", util.FormatDuration(currentDuration)))
+			}
 		}),
 
-		stopBtn: widget.NewButton("stop", func() {
+		stopBtn: widget.NewButtonWithIcon("", stopBtnImg, func() {
 			ticker.Stop()
+			isStart = false
+			isPause = false
 			statusIcon.Resource = stopImg
 			statusIcon.Refresh()
 			saveStatusHook()
 		}),
 
-		pauseBtn: widget.NewButton("pause", func() {
-			// ticker.Stop()
-			// statusIcon.Resource = pauseImg
-			// statusIcon.Refresh()
+		pauseBtn: widget.NewButtonWithIcon("", theme.MediaPauseIcon(), func() {
+			ticker.Stop()
+			isPause = true
+			statusIcon.Resource = pauseImg
+			statusIcon.Refresh()
+			saveStatusHook()
 		}),
 	}
 
-	item.deleteBtn = widget.NewButton("DELETE", func() {
+	item.deleteBtn = widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
 		w := fyne.CurrentApp().NewWindow("ARE YOU SURE?")
 		yesBtn := widget.NewButtonWithIcon("YES", theme.ConfirmIcon(), func() {
 			item.parentItemList.RemoveItem(item)
@@ -96,15 +127,31 @@ func NewItem(title string, status *core.Status, ticker *core.Ticker, statusIcon 
 
 func (item *Item) toContainer() *fyne.Container {
 	rows := 2
-	columns := 2
-	box := container.NewGridWithRows(
-		rows,
-		container.NewGridWithColumns(columns, item.title, item.statusIcon),
-		item.totalDurationLabel,
-		item.startBtn,
-		item.pauseBtn,
-		item.stopBtn,
-		item.deleteBtn,
+	// columns := 2
+	// box := container.NewGridWithRows(
+	// 	rows,
+	// 	// container.NewGridWithColumns(columns, item.title, item.statusIcon),
+	// 	item.title,
+	// 	item.statusIcon,
+	// 	currentLabel,
+	// 	totalLabel,
+	// 	item.currentDurationLabel,
+	// 	item.totalDurationLabel,
+	// 	item.startBtn,
+	// 	item.stopBtn,
+	// 	item.deleteBtn,
+	// )
+	box := container.NewVBox(
+		container.NewGridWithRows(rows, item.title, item.statusIcon,
+			item.currentDurationLabel, item.totalDurationLabel),
+		container.NewHBox(
+			layout.NewSpacer(),
+			item.startBtn,
+			item.pauseBtn,
+			item.stopBtn,
+			item.deleteBtn,
+			layout.NewSpacer(),
+		),
 	)
 
 	return box
@@ -124,7 +171,10 @@ func (item *Item) Start() {
 			item.status.Duration += time.Second
 			item.status.Counter.Inc()
 			item.status.TotalCounter.Inc()
-			item.totalDurationLabel.SetText(fmt.Sprintf("total: %s", util.FormatDuration(item.status.Duration)))
+			item.totalDurationLabel.SetText(fmt.Sprintf("T: %s", util.FormatDuration(item.status.Duration)))
+			// test currnentDuration
+			*item.currentDuration += time.Second
+			item.currentDurationLabel.SetText(fmt.Sprintf("C: %s", util.FormatDuration(*item.currentDuration)))
 		}
 	}
 }

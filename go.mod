@@ -3,6 +3,7 @@ module github.com/lobshunter86/stop-watch
 go 1.16
 
 require (
+	fyne.io/fyne v1.4.3 // indirect
 	fyne.io/fyne/v2 v2.0.3
 	github.com/go-gl/gl v0.0.0-20210501111010-69f74958bac0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
