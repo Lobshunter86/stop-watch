@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"fyne.io/fyne/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 
@@ -83,6 +84,8 @@ var rootCmd = &cobra.Command{
 
 		// GUI
 		w.SetCloseIntercept(onClose)
+		w.Resize(fyne.NewSize(1, 360))
+
 		w.ShowAndRun()
 		return nil
 	},

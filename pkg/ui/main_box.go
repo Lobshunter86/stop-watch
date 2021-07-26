@@ -21,8 +21,7 @@ func NewUIFromStatuses(statuses map[string]*core.Status, saveStatusHook func()) 
 	win := a.NewWindow("stop watch")
 	win.CenterOnScreen()
 
-	outerBox := container.NewVBox()
-	itemList := NewItemList(statuses, outerBox)
+	itemList := NewItemList(statuses, nil)
 
 	items := make([]*Item, 0, len(statuses))
 	for label, status := range statuses {
@@ -35,12 +34,14 @@ func NewUIFromStatuses(statuses map[string]*core.Status, saveStatusHook func()) 
 
 	itemList.SetItems(items)
 	itemList.listCtner = itemList.ToContainer()
+	itemList.scrollCtner = itemList.ToScrollContainer()
 
 	newItemBotton := NewAddItemBotton(itemList, saveStatusHook)
-	outerBox.Add(itemList.listCtner)
-	outerBox.Add(newItemBotton)
-
-	win.SetContent(outerBox)
+	outerBox := container.NewBorder(nil, newItemBotton, nil, nil, itemList.scrollCtner)
+	itemList.container = outerBox
+	columns := 1
+	motherBox := container.NewAdaptiveGrid(columns, outerBox)
+	win.SetContent(motherBox)
 	return win
 }
 
